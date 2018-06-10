@@ -1,21 +1,21 @@
 package Preprocessing.ContentCleaning;
 
 import Preprocessing.TokenReplace.DFLReplacer;
+import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class DocumentCleaner
 {
-    private List<String> _stopwords;
-    private List<String> _playerList;
-    private List<String> _clubList;
-    private List<String> _trainerList;
+    private Set<String> _stopwords;
+    private Set<String> _playerList;
+    private Set<String> _clubList;
+    private Set<String> _trainerList;
 
     public DocumentCleaner(String stopwordFile, String playerFile, String clubFile, String trainerFile)
     {
@@ -29,7 +29,7 @@ public class DocumentCleaner
     {
         System.out.println("INFO: Loading stopwords from file...");
 
-        _stopwords = new ArrayList<>();
+        _stopwords = new HashSet<>();
         try
         {
             List<String> lines = Files.readAllLines(new File(fileName).toPath());
@@ -45,7 +45,7 @@ public class DocumentCleaner
     {
         System.out.println("INFO: Loading playerNames from file...");
 
-        _playerList = new ArrayList<>();
+        _playerList = new HashSet<>();
         try
         {
             List<String> lines = Files.readAllLines(new File(fileName).toPath());
@@ -61,7 +61,7 @@ public class DocumentCleaner
     {
         System.out.println("INFO: Loading clubNames from file...");
 
-        _clubList = new ArrayList<>();
+        _clubList = new HashSet<>();
         try
         {
             List<String> lines = Files.readAllLines(new File(fileName).toPath(), Charset.forName("ISO-8859-1"));
@@ -77,7 +77,7 @@ public class DocumentCleaner
     {
         System.out.println("INFO: Loading trainerNames from file...");
 
-        _trainerList = new ArrayList<>();
+        _trainerList = new HashSet<>();
         try
         {
             List<String> lines = Files.readAllLines(new File(fileName).toPath());
@@ -94,13 +94,14 @@ public class DocumentCleaner
         //TODO WARNING: CHANGING THE ORDER MIGHT RESULT IN UNEXPECTED RESULTS
 
         input = fixWhitespaces(input);
+        input = unescapeText(input);
         input = transformToLowerCaseTrim(input);
         input = replaceUmlauts(input);
         input = replaceDates(input);
         input = stripPunctuation(input);
-        input = replaceSpecialCharacters(input);
-        input = replaceNonAsciiCharacters(input);
+        input = replaceSpecialCharactersWithWhitespace(input);
         input = normalizeText(input);
+        input = replaceNonAsciiCharacters(input);
         input = normalizeWhitespaces(input);
         return input.trim();
     }
@@ -111,22 +112,26 @@ public class DocumentCleaner
 
         //TODO TS abbreviation removal
 
+        input = replaceBundesligaCom(input);
         input = fixWhitespaces(input);
         input = fixMacEncoding(input);
+        input = unescapeText(input);
         input = transformToLowerCaseTrim(input);
         input = replaceUmlauts(input);
         input = replaceDates(input);
         input = stripPunctuation(input);
-        input = replaceSpecialCharacters(input);
-        input = replaceNonAsciiCharacters(input);
+        input = replaceSpecialCharactersWithWhitespace(input);
         input = normalizeText(input);
+        input = replaceNonAsciiCharacters(input);
+
+        List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
         {
             DFLReplacer dflReplacer = new DFLReplacer();
-            input = dflReplacer.replaceToken(input, _playerList, "<token_player>");
-            input = dflReplacer.replaceToken(input, _clubList, "<token_club>");
-            input = dflReplacer.replaceToken(input, _trainerList, "<token_trainer>");
+            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _playerList);
+            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _clubList);
+            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList);
         }
-        input = removeStopwords(input);
+        input = removeStopwords(inputSplit);
         input = normalizeWhitespaces(input);
         return input.trim();
     }
@@ -185,6 +190,40 @@ public class DocumentCleaner
         }
     }
 
+    private String processFilterTokensPerWord(Set<String> tokens, boolean splitTokens)
+    {
+        StringBuilder content = new StringBuilder();
+        for(String currentToken:tokens)
+        {
+            currentToken = replaceHypenAndApostrope(currentToken);
+
+            if(splitTokens)
+            {
+                String[] tokenParts = currentToken.split(" ");
+                for(String currentPart:tokenParts)
+                {
+                    currentPart = filterTokenCleanProcessInternal(currentPart);
+                    if(currentPart.length() >= 3)
+                        content.append(currentPart).append(System.lineSeparator());
+                }
+            }
+            else
+            {
+                currentToken = filterTokenCleanProcessInternal(currentToken);
+                content.append(currentToken).append(System.lineSeparator());
+            }
+        }
+        return content.toString();
+    }
+
+    private File createFileAndDirectory(String fullName) throws IOException
+    {
+        File file = new File(fullName);
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+        return file;
+    }
+
     public void preprocessFilterFiles(String saveDirectory)
     {
         System.out.println("INFO: Preprocessing filter files...");
@@ -194,17 +233,9 @@ public class DocumentCleaner
         File clubsOutputFile;
         try
         {
-            playerOutputFile = new File(saveDirectory + "\\playerList_preprocessed.txt");
-            playerOutputFile.getParentFile().mkdirs();
-            playerOutputFile.createNewFile();
-
-            trainerOutputFile = new File(saveDirectory + "\\trainerList_preprocessed.txt");
-            trainerOutputFile.getParentFile().mkdirs();
-            trainerOutputFile.createNewFile();
-
-            clubsOutputFile = new File(saveDirectory + "\\clubsList_preprocessed.txt");
-            clubsOutputFile.getParentFile().mkdirs();
-            clubsOutputFile.createNewFile();
+            playerOutputFile = createFileAndDirectory(saveDirectory + "\\playerList_preprocessed.txt");
+            trainerOutputFile = createFileAndDirectory(saveDirectory + "\\trainerList_preprocessed.txt");
+            clubsOutputFile = createFileAndDirectory(saveDirectory + "\\clubsList_preprocessed.txt");
         }
         catch (Exception ex)
         {
@@ -213,29 +244,22 @@ public class DocumentCleaner
             return;
         }
 
-        StringBuilder playerContent = new StringBuilder();
-        for(String player:_playerList)
-        {
-            player = filterTokenCleanProcessInternal(player);
-            playerContent.append(player).append(System.lineSeparator());
-        }
-        writeContentToExistingFile(playerContent.toString().trim(), playerOutputFile);
+        String playerContent = processFilterTokensPerWord(_playerList, false);
+        writeContentToExistingFile(playerContent.trim(), playerOutputFile);
 
-        StringBuilder trainerContent = new StringBuilder();
-        for(String trainer:_trainerList)
-        {
-            trainer = filterTokenCleanProcessInternal(trainer);
-            trainerContent.append(trainer).append(System.lineSeparator());
-        }
-        writeContentToExistingFile(trainerContent.toString().trim(), trainerOutputFile);
+        String trainerContent = processFilterTokensPerWord(_trainerList, false);
+        writeContentToExistingFile(trainerContent.trim(), trainerOutputFile);
 
-        StringBuilder clubsContent = new StringBuilder();
-        for(String club:_clubList)
-        {
-            club = filterTokenCleanProcessInternal(club);
-            clubsContent.append(club).append(System.lineSeparator());
-        }
-        writeContentToExistingFile(clubsContent.toString().trim(), clubsOutputFile);
+        String clubsContent = processFilterTokensPerWord(_clubList, false);
+        writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
+    }
+
+    public String removeStopwords(List<String> input)
+    {
+        input.removeAll(_stopwords);
+        StringBuilder builder = new StringBuilder();
+        input.forEach(x -> builder.append(x).append(" "));
+        return builder.toString().trim();
     }
 
     public String removeStopwords(String input)
@@ -244,11 +268,16 @@ public class DocumentCleaner
         StringBuilder builder = new StringBuilder();
         for(String word:wordsInLine)
         {
-            if(_stopwords.contains(word))
+            if(_stopwords.contains(word) || word.length() < 3)
                 continue;
             builder.append(word).append(" ");
         }
         return builder.toString().trim();
+    }
+
+    public String replaceBundesligaCom(String input)
+    {
+        return input.replace("bundesliga.com", " ");
     }
 
     public String transformToLowerCaseTrim(String input)
@@ -283,12 +312,7 @@ public class DocumentCleaner
         return input.replaceAll("[?!,;.:]+", " ");
     }
 
-    public String replaceUnderscoreAngleBracketApostrophe(String input)
-    {
-        return input.replaceAll("[<>_']", " ");
-    }
-
-    public String replaceSpecialCharacters(String input)
+    public String replaceSpecialCharactersWithWhitespace(String input)
     {
         input = input.replaceAll("[<>_]+", " ");
         return input.replaceAll("[\\d\"§$%&/()=`ß´²³{\\[\\]}\\\\+*~#'\\-|^°@€]+", " ");
@@ -308,5 +332,19 @@ public class DocumentCleaner
     public String fixMacEncoding(String input)
     {
         return input.replaceAll("([a-z])([A-Z]+)", "$1 $2");
+    }
+
+    public String replaceHypenAndApostrope(String input)
+    {
+        return input.replaceAll("['-]+", " ");
+    }
+
+    public String unescapeText(String input)
+    {
+        input = StringEscapeUtils.unescapeXml(input);
+        input = StringEscapeUtils.unescapeJava(input);
+        input = input.replace("c;", "c");
+        input = input.replace("ø", "oe");
+        return input;
     }
 }

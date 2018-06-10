@@ -1,8 +1,7 @@
 package Preprocessing.TokenReplace;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +27,13 @@ public class DFLReplacer
         }
         return content;
     }
+
+    public List<String> replaceTokenTest(List<String> content, Set<String> tokens)
+    {
+        content.removeAll(tokens);
+        return content;
+    }
+
 
     void loadClubs()
     {

@@ -16,22 +16,29 @@ public class ContentCleaningRoot
         String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
         String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
         String stopwordFile = "C:\\Users\\Tommy\\Documents\\IntelliJIdea\\Projects\\DSBS_Collection\\src\\resources\\stopwords.txt";
-        String playerFile = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed\\playerList_preprocessed.txt";
-        String clubFile = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed\\clubsList_preprocessed.txt";
-        String trainerFile = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed\\trainerList_preprocessed.txt";
-
-        DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFile, clubFile, trainerFile);
+        String playerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String clubFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String trainerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
 
         if(FILTER_PREPROCESSING_ONLY)
         {
-            //TODO Thomas local
-            String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
+            String playerFileRaw = playerFileBase + "\\raw\\player.txt";
+            String clubFileRaw = clubFileBase + "\\raw\\clubs.txt";
+            String trainerFileRaw = trainerFileBase + "\\raw\\trainer.txt";
+
+            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw);
             documentCleaner.preprocessFilterFiles(filterOutputDirectory);
             return;
         }
 
         try(Stream<Path> contentStream = Files.walk(Paths.get(contentDirectory)))
         {
+            String playerFilePreprocessed = playerFileBase + "\\preprocessed\\playerList_preprocessed.txt";
+            String clubFilePreprocessed = clubFileBase + "\\preprocessed\\clubsList_preprocessed.txt";
+            String trainerFilePreprocessed = trainerFileBase + "\\preprocessed\\trainerList_preprocessed.txt";
+
+            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed);
             contentStream.filter(Files::isRegularFile).forEach(x -> documentCleaner.cleanProcess(x, saveDirectory));
         }
         catch (Exception ex)
