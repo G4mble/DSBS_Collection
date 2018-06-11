@@ -16,9 +16,17 @@ public class DocumentCleaner
     private Set<String> _playerList;
     private Set<String> _clubList;
     private Set<String> _trainerList;
+    private final boolean _splitPlayerTokens;
+    private final boolean _splitClubsTokens;
+    private final boolean _splitTrainerTokens;
 
-    public DocumentCleaner(String stopwordFile, String playerFile, String clubFile, String trainerFile)
+    public DocumentCleaner(String stopwordFile, String playerFile, String clubFile, String trainerFile,
+                           boolean splitPlayerTokens, boolean splitClubsTokens, boolean splitTrainerTokens)
     {
+        _splitPlayerTokens = splitPlayerTokens;
+        _splitClubsTokens = splitClubsTokens;
+        _splitTrainerTokens = splitTrainerTokens;
+
         loadStopwords(stopwordFile);
         loadPlayers(playerFile);
         loadClubs(clubFile);
@@ -129,9 +137,10 @@ public class DocumentCleaner
             DFLReplacer dflReplacer = new DFLReplacer();
             inputSplit = dflReplacer.replaceTokenTest(inputSplit, _playerList);
             inputSplit = dflReplacer.replaceTokenTest(inputSplit, _clubList);
-            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList);
+//            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList);
         }
         input = removeStopwords(inputSplit);
+//        input = removeStopwords(input);
         input = normalizeWhitespaces(input);
         return input.trim();
     }
@@ -244,13 +253,13 @@ public class DocumentCleaner
             return;
         }
 
-        String playerContent = processFilterTokensPerWord(_playerList, false);
+        String playerContent = processFilterTokensPerWord(_playerList, _splitPlayerTokens);
         writeContentToExistingFile(playerContent.trim(), playerOutputFile);
 
-        String trainerContent = processFilterTokensPerWord(_trainerList, false);
+        String trainerContent = processFilterTokensPerWord(_trainerList, _splitTrainerTokens);
         writeContentToExistingFile(trainerContent.trim(), trainerOutputFile);
 
-        String clubsContent = processFilterTokensPerWord(_clubList, false);
+        String clubsContent = processFilterTokensPerWord(_clubList, _splitClubsTokens);
         writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
     }
 
@@ -268,7 +277,7 @@ public class DocumentCleaner
         StringBuilder builder = new StringBuilder();
         for(String word:wordsInLine)
         {
-            if(_stopwords.contains(word) || word.length() < 3)
+            if(_stopwords.contains(word) || word.length() < 2)
                 continue;
             builder.append(word).append(" ");
         }
@@ -315,7 +324,7 @@ public class DocumentCleaner
     public String replaceSpecialCharactersWithWhitespace(String input)
     {
         input = input.replaceAll("[<>_]+", " ");
-        return input.replaceAll("[\\d\"§$%&/()=`ß´²³{\\[\\]}\\\\+*~#'\\-|^°@€]+", " ");
+        return input.replaceAll("[\\d\"§$%&/()=`ß´²³{\\[\\]}\\\\+*~#'’\\-|^°@€]+", " ");
     }
     
     public String normalizeText(String input)

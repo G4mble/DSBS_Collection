@@ -10,16 +10,29 @@ public class ContentCleaningRoot
     //TODO set to true if only player/club/trainer lists should be preprocessed [should be done at least once]
     private static final boolean FILTER_PREPROCESSING_ONLY = false;
 
+    private static final boolean SPLIT_PLAYER_TOKENS = false;
+    private static final boolean SPLIT_CLUBS_TOKENS = false;
+    private static final boolean SPLIT_TRAINER_TOKENS = false;
+
     public static void main(String[] args)
     {
         //TODO Thomas local
-        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
-        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
-        String stopwordFile = "C:\\Users\\Tommy\\Documents\\IntelliJIdea\\Projects\\DSBS_Collection\\src\\resources\\stopwords.txt";
-        String playerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-        String clubFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-        String trainerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-        String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
+//        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
+//        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
+//        String stopwordFile = "C:\\Users\\Tommy\\Documents\\IntelliJIdea\\Projects\\DSBS_Collection\\src\\resources\\stopwords.txt";
+//        String playerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+//        String clubFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+//        String trainerFileBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+//        String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
+
+        //TODO Thomas Laptop local
+        String contentDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
+        String saveDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
+        String stopwordFile = "C:\\Users\\Thomas-Laptop\\IdeaProjects\\DSBS_Collection\\src\\resources\\stopwords.txt";
+        String playerFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String clubFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String trainerFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+        String filterOutputDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
 
         if(FILTER_PREPROCESSING_ONLY)
         {
@@ -27,7 +40,8 @@ public class ContentCleaningRoot
             String clubFileRaw = clubFileBase + "\\raw\\clubs.txt";
             String trainerFileRaw = trainerFileBase + "\\raw\\trainer.txt";
 
-            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw);
+            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw,
+                    SPLIT_PLAYER_TOKENS, SPLIT_CLUBS_TOKENS, SPLIT_TRAINER_TOKENS);
             documentCleaner.preprocessFilterFiles(filterOutputDirectory);
             return;
         }
@@ -38,7 +52,8 @@ public class ContentCleaningRoot
             String clubFilePreprocessed = clubFileBase + "\\preprocessed\\clubsList_preprocessed.txt";
             String trainerFilePreprocessed = trainerFileBase + "\\preprocessed\\trainerList_preprocessed.txt";
 
-            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed);
+            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed,
+                    SPLIT_PLAYER_TOKENS, SPLIT_CLUBS_TOKENS, SPLIT_TRAINER_TOKENS);
             contentStream.filter(Files::isRegularFile).forEach(x -> documentCleaner.cleanProcess(x, saveDirectory));
         }
         catch (Exception ex)
