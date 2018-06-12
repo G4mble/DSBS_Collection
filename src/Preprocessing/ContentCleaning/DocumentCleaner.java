@@ -1,5 +1,6 @@
 package Preprocessing.ContentCleaning;
 
+import Config.ProcessConfig;
 import Preprocessing.TokenReplace.DFLReplacer;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -16,21 +17,21 @@ public class DocumentCleaner
     private Set<String> _playerList;
     private Set<String> _clubList;
     private Set<String> _trainerList;
-    private final boolean _splitPlayerTokens;
-    private final boolean _splitClubsTokens;
-    private final boolean _splitTrainerTokens;
 
-    public DocumentCleaner(String stopwordFile, String playerFile, String clubFile, String trainerFile,
-                           boolean splitPlayerTokens, boolean splitClubsTokens, boolean splitTrainerTokens)
+    private ProcessConfig _config;
+
+    public DocumentCleaner(String stopwordFile, String playerFile, String clubFile, String trainerFile)
     {
-        _splitPlayerTokens = splitPlayerTokens;
-        _splitClubsTokens = splitClubsTokens;
-        _splitTrainerTokens = splitTrainerTokens;
-
         loadStopwords(stopwordFile);
         loadPlayers(playerFile);
         loadClubs(clubFile);
         loadTrainers(trainerFile);
+    }
+
+    public DocumentCleaner(ProcessConfig config, String stopwordFile, String playerFile, String clubFile, String trainerFile)
+    {
+        this(stopwordFile, playerFile, clubFile, trainerFile);
+        _config = config;
     }
 
     private void loadStopwords(String fileName)
@@ -132,15 +133,32 @@ public class DocumentCleaner
         input = normalizeText(input);
         input = replaceNonAsciiCharacters(input);
 
-        List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
+        if(_config.getPerformPerWordProcesses())
         {
-            DFLReplacer dflReplacer = new DFLReplacer();
-            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _playerList);
-            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _clubList);
-//            inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList);
+            List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
+            {
+                DFLReplacer dflReplacer = new DFLReplacer();
+                if(_config.getReplacePlayerTokens())
+                    inputSplit = dflReplacer.replaceTokenTest(inputSplit, _playerList, "<token_player>");
+                if(_config.getReplaceClubTokens())
+                    inputSplit = dflReplacer.replaceTokenTest(inputSplit, _clubList, "<token_club>");
+                if(_config.getReplaceTrainerTokens())
+                    inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList, "<token_trainer>");
+                if(_config.getRemovePlayerTokens())
+                    inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
+                if(_config.getRemoveClubTokens())
+                    inputSplit = dflReplacer.removeToken(inputSplit, _clubList);
+                if(_config.getRemoveTrainerTokens())
+                    inputSplit = dflReplacer.removeToken(inputSplit, _trainerList);
+            }
+
+            StringBuilder builder = new StringBuilder();
+            inputSplit.forEach(x -> builder.append(x).append(" "));
+            input = builder.toString().trim();
         }
-        input = removeStopwords(inputSplit);
-//        input = removeStopwords(input);
+
+        if(_config.getRemoveStopwords())
+            input = removeStopwords(input);
         input = normalizeWhitespaces(input);
         return input.trim();
     }
@@ -253,13 +271,13 @@ public class DocumentCleaner
             return;
         }
 
-        String playerContent = processFilterTokensPerWord(_playerList, _splitPlayerTokens);
+        String playerContent = processFilterTokensPerWord(_playerList, _config.getSplitPlayerTokens());
         writeContentToExistingFile(playerContent.trim(), playerOutputFile);
 
-        String trainerContent = processFilterTokensPerWord(_trainerList, _splitTrainerTokens);
+        String trainerContent = processFilterTokensPerWord(_trainerList, _config.getSplitTrainerTokens());
         writeContentToExistingFile(trainerContent.trim(), trainerOutputFile);
 
-        String clubsContent = processFilterTokensPerWord(_clubList, _splitClubsTokens);
+        String clubsContent = processFilterTokensPerWord(_clubList, _config.getSplitClubTokens());
         writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
     }
 
@@ -277,7 +295,7 @@ public class DocumentCleaner
         StringBuilder builder = new StringBuilder();
         for(String word:wordsInLine)
         {
-            if(_stopwords.contains(word) || word.length() < 2)
+            if(_stopwords.contains(word) || word.length() < _config.getTokenMinLength())
                 continue;
             builder.append(word).append(" ");
         }

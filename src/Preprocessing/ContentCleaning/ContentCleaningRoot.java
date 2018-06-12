@@ -1,5 +1,7 @@
 package Preprocessing.ContentCleaning;
 
+import Config.ProcessConfig;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,10 +11,6 @@ public class ContentCleaningRoot
 {
     //TODO set to true if only player/club/trainer lists should be preprocessed [should be done at least once]
     private static final boolean FILTER_PREPROCESSING_ONLY = false;
-
-    private static final boolean SPLIT_PLAYER_TOKENS = false;
-    private static final boolean SPLIT_CLUBS_TOKENS = false;
-    private static final boolean SPLIT_TRAINER_TOKENS = false;
 
     public static void main(String[] args)
     {
@@ -40,20 +38,19 @@ public class ContentCleaningRoot
             String clubFileRaw = clubFileBase + "\\raw\\clubs.txt";
             String trainerFileRaw = trainerFileBase + "\\raw\\trainer.txt";
 
-            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw,
-                    SPLIT_PLAYER_TOKENS, SPLIT_CLUBS_TOKENS, SPLIT_TRAINER_TOKENS);
+            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw);
             documentCleaner.preprocessFilterFiles(filterOutputDirectory);
             return;
         }
 
+        ProcessConfig config = new ProcessConfig();
         try(Stream<Path> contentStream = Files.walk(Paths.get(contentDirectory)))
         {
             String playerFilePreprocessed = playerFileBase + "\\preprocessed\\playerList_preprocessed.txt";
             String clubFilePreprocessed = clubFileBase + "\\preprocessed\\clubsList_preprocessed.txt";
             String trainerFilePreprocessed = trainerFileBase + "\\preprocessed\\trainerList_preprocessed.txt";
 
-            DocumentCleaner documentCleaner = new DocumentCleaner(stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed,
-                    SPLIT_PLAYER_TOKENS, SPLIT_CLUBS_TOKENS, SPLIT_TRAINER_TOKENS);
+            DocumentCleaner documentCleaner = new DocumentCleaner(config, stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed);
             contentStream.filter(Files::isRegularFile).forEach(x -> documentCleaner.cleanProcess(x, saveDirectory));
         }
         catch (Exception ex)

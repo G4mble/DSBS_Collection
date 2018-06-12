@@ -28,7 +28,19 @@ public class DFLReplacer
         return content;
     }
 
-    public List<String> replaceTokenTest(List<String> content, Set<String> tokens)
+    public List<String> replaceTokenTest(List<String> content, Set<String> tokens, String replacement)
+    {
+        Set<String> contentCopy = new HashSet<>(content);
+        for(String item:contentCopy)
+        {
+            if(tokens.contains(item))
+                Collections.replaceAll(content, item, replacement);
+        }
+//        tokens.forEach(x -> Collections.replaceAll(content, x, replacement));
+        return content;
+    }
+
+    public List<String> removeToken(List<String> content, Set<String> tokens)
     {
         content.removeAll(tokens);
         return content;
