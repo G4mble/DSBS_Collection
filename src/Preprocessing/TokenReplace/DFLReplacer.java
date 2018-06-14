@@ -36,7 +36,6 @@ public class DFLReplacer
             if(tokens.contains(item))
                 Collections.replaceAll(content, item, replacement);
         }
-//        tokens.forEach(x -> Collections.replaceAll(content, x, replacement));
         return content;
     }
 

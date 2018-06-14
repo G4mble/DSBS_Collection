@@ -1,5 +1,7 @@
 package Config;
 
+import Preprocessing.Resources.ResourceProvider;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.stream.Stream;
@@ -18,6 +20,8 @@ public class ProcessConfig
     private boolean splitTrainerTokens;
     private boolean splitClubTokens;
     private boolean splitPlayerTokens;
+    private boolean checkTokenMinLength;
+    private boolean configureForTokenFilterPreprocessing;
 
     public ProcessConfig()
     {
@@ -62,6 +66,9 @@ public class ProcessConfig
                 case "removeTrainerTokens":
                     removeTrainerTokens = Boolean.parseBoolean(rightHandSide);
                     break;
+                case "checkTokenMinLength":
+                    checkTokenMinLength = Boolean.parseBoolean(rightHandSide);
+                    break;
                 case "tokenMinLength":
                     tokenMinLength = Integer.parseInt(rightHandSide);
                     break;
@@ -73,6 +80,9 @@ public class ProcessConfig
                     break;
                 case "splitTrainerTokens":
                     splitTrainerTokens = Boolean.parseBoolean(rightHandSide);
+                    break;
+                case "configureForTokenFilterPreprocessing":
+                    configureForTokenFilterPreprocessing = Boolean.parseBoolean(rightHandSide);
                     break;
                 default:
                     return false;
@@ -107,8 +117,7 @@ public class ProcessConfig
 
     private void initializeInternal()
     {
-        String path = ProcessConfig.class.getResource("cleanerConfig.cfg").getPath();
-        loadConfigurationFromFile(path);
+        loadConfigurationFromFile(ResourceProvider.getConfigPath());
     }
 
     public boolean getReplacePlayerTokens() {
@@ -159,6 +168,16 @@ public class ProcessConfig
     {
         return replaceClubTokens || replaceTrainerTokens || replacePlayerTokens ||
                 removeClubTokens || removeTrainerTokens || removePlayerTokens ||
-                removeStopwords;
+                removeStopwords || checkTokenMinLength;
+    }
+
+    public boolean getCheckTokenMinLength()
+    {
+        return checkTokenMinLength;
+    }
+
+    public boolean getConfigureForTokenFilterPreprocessing()
+    {
+        return configureForTokenFilterPreprocessing;
     }
 }
