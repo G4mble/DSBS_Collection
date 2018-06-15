@@ -1,7 +1,7 @@
 package Preprocessing.ContentCleaning;
 
-import Config.ProcessConfig;
-import Preprocessing.Resources.ResourceProvider;
+import Config.ContentProcessConfig;
+import Resources.ResourceProvider;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,25 +10,23 @@ import java.util.stream.Stream;
 
 public class ContentCleaningRoot
 {
-    //TODO set to true if only player/club/trainer lists should be preprocessed [should be done at least once]
-    private static final boolean FILTER_PREPROCESSING_ONLY = false;
-
     public static void main(String[] args)
     {
         //region Local Paths
 
         //TODO Thomas local
-        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
+        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw";
         String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
+        //TODO select one depending on acbstrac or content
+//        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\raw";
+//        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\preprocessed";
         String tokenFilterBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
         String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
 
         //TODO Thomas Laptop local
 //        String contentDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
 //        String saveDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
-//        String playerFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-//        String clubFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-//        String trainerFileBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
+//        String tokenFilterBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
 //        String filterOutputDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
 
         //endregion
@@ -39,7 +37,14 @@ public class ContentCleaningRoot
 
         //endregion
 
-        ProcessConfig config = new ProcessConfig();
+        //region Config Init
+
+        ContentProcessConfig config = new ContentProcessConfig();
+
+        //endregion
+
+        //region Token-Filter Preprocessing
+
         if(config.getConfigureForTokenFilterPreprocessing())
         {
             String playerFileRaw = tokenFilterBase + "\\raw\\player.txt";
@@ -50,6 +55,10 @@ public class ContentCleaningRoot
             documentCleaner.preprocessFilterFiles(filterOutputDirectory);
             return;
         }
+
+        //endregion
+
+        //region Content-File Preprocessing
 
         try(Stream<Path> contentStream = Files.walk(Paths.get(contentDirectory)))
         {
@@ -64,5 +73,7 @@ public class ContentCleaningRoot
         {
             ex.printStackTrace();
         }
+
+        //endregion
     }
 }

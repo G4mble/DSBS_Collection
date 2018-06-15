@@ -1,13 +1,11 @@
 package Config;
 
-import Preprocessing.Resources.ResourceProvider;
+import Resources.ResourceProvider;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.stream.Stream;
-
-public class ProcessConfig
+public class ContentProcessConfig extends ProcessConfigBase
 {
+    //region Fields
+
     private boolean replacePlayerTokens;
     private boolean replaceClubTokens;
     private boolean replaceTrainerTokens;
@@ -15,20 +13,34 @@ public class ProcessConfig
     private boolean removeClubTokens;
     private boolean removePlayerTokens;
     private boolean removeStopwords;
-
-    private int tokenMinLength;
     private boolean splitTrainerTokens;
     private boolean splitClubTokens;
     private boolean splitPlayerTokens;
     private boolean checkTokenMinLength;
     private boolean configureForTokenFilterPreprocessing;
 
-    public ProcessConfig()
+    private int tokenMinLength;
+
+    //endregion
+
+    //region Constructors
+
+    public ContentProcessConfig()
     {
-        initializeInternal();
+        try
+        {
+            initializeInternal(ResourceProvider.getContentConfigPath());
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
     }
 
-    private boolean processLineContent(String line)
+    //endregion
+
+    @Override
+    protected boolean processLineContent(String line)
     {
         line = line.replaceAll("\\%.*?\\%", "");
         if (line.length() == 0)
@@ -96,29 +108,7 @@ public class ProcessConfig
         return false;
     }
 
-    private void loadConfigurationFromFile(String path)
-    {
-        try (Stream<String> lineStream = Files.lines(new File(path).toPath()))
-        {
-            for (String line : (Iterable<String>) lineStream::iterator)
-            {
-                if (!processLineContent(line))
-                {
-                    System.out.println("ERROR: Invalid configuration detected.");
-                    return;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
-
-    private void initializeInternal()
-    {
-        loadConfigurationFromFile(ResourceProvider.getConfigPath());
-    }
+    //region Getter / Setter
 
     public boolean getReplacePlayerTokens() {
         return replacePlayerTokens;
@@ -180,4 +170,6 @@ public class ProcessConfig
     {
         return configureForTokenFilterPreprocessing;
     }
+
+    //endregion
 }

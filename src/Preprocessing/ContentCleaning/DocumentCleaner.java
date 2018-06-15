@@ -1,26 +1,33 @@
 package Preprocessing.ContentCleaning;
 
-import Config.ProcessConfig;
+import Config.ContentProcessConfig;
 import Preprocessing.TokenReplace.DFLReplacer;
+import Utility.CollectionHelper;
+import Utility.FileHelper;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
 import java.util.*;
 
 public class DocumentCleaner
 {
+    //region Fields
+
     private Set<String> _stopwords;
     private Set<String> _playerList;
     private Set<String> _clubList;
     private Set<String> _trainerList;
 
-    private final ProcessConfig _config;
+    private final ContentProcessConfig _config;
 
-    public DocumentCleaner(ProcessConfig config, String stopwordFile, String playerFile, String clubFile, String trainerFile)
+    //endregion
+
+    //region Constructors
+
+    public DocumentCleaner(ContentProcessConfig config, String stopwordFile, String playerFile, String clubFile, String trainerFile)
     {
         _config = config;
         loadStopwords(stopwordFile);
@@ -29,15 +36,16 @@ public class DocumentCleaner
         loadTrainers(trainerFile);
     }
 
+    //endregion
+
+    //region Private Methods
+
     private void loadStopwords(String fileName)
     {
         System.out.println("INFO: Loading stopwords from file...");
-
-        _stopwords = new HashSet<>();
         try
         {
-            List<String> lines = Files.readAllLines(new File(fileName).toPath());
-            _stopwords.addAll(lines);
+            _stopwords = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
         {
@@ -48,12 +56,9 @@ public class DocumentCleaner
     private void loadPlayers(String fileName)
     {
         System.out.println("INFO: Loading playerNames from file...");
-
-        _playerList = new HashSet<>();
         try
         {
-            List<String> lines = Files.readAllLines(new File(fileName).toPath());
-            _playerList.addAll(lines);
+            _playerList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
         {
@@ -64,12 +69,9 @@ public class DocumentCleaner
     private void loadClubs(String fileName)
     {
         System.out.println("INFO: Loading clubNames from file...");
-
-        _clubList = new HashSet<>();
         try
         {
-            List<String> lines = Files.readAllLines(new File(fileName).toPath(), Charset.forName("ISO-8859-1"));
-            _clubList.addAll(lines);
+            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("ISO-8859-1"));
         }
         catch (Exception ex)
         {
@@ -80,12 +82,9 @@ public class DocumentCleaner
     private void loadTrainers(String fileName)
     {
         System.out.println("INFO: Loading trainerNames from file...");
-
-        _trainerList = new HashSet<>();
         try
         {
-            List<String> lines = Files.readAllLines(new File(fileName).toPath());
-            _trainerList.addAll(lines);
+            _trainerList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
         {
@@ -148,72 +147,10 @@ public class DocumentCleaner
             if(_config.getCheckTokenMinLength())
                 inputSplit = ensureTokenMinLength(inputSplit);
 
-            input = collectionToString(inputSplit);
+            input = CollectionHelper.collectionToString(inputSplit);
         }
         input = normalizeWhitespaces(input);
         return input.trim();
-    }
-
-    private String collectionToString(Collection<String> input)
-    {
-        StringBuilder builder = new StringBuilder();
-        for(String element:input)
-            builder.append(element).append(" ");
-        return builder.toString().trim();
-    }
-
-    private void writeContentToExistingFile(String content, File file)
-    {
-        try(FileWriter fw = new FileWriter(file);
-            BufferedWriter writer = new BufferedWriter(fw))
-        {
-            writer.write(content);
-            writer.flush();
-        }
-        catch(Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
-
-    public void cleanProcess(Path path, String saveDirectory)
-    {
-        System.out.println("INFO: Processing " + path + " ...");
-        File contentFile;
-        File outputFile;
-        try
-        {
-            contentFile = path.toFile();
-            outputFile = new File(saveDirectory + "\\" + contentFile.getName().replace(".txt", "") + "_preprocessed.txt");
-            outputFile.getParentFile().mkdirs();
-            outputFile.createNewFile();
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Terminating...");
-            ex.printStackTrace();
-            return;
-        }
-
-        String currentLine;
-        StringBuilder builder = new StringBuilder();
-        try(FileReader fr = new FileReader(contentFile);
-            BufferedReader reader = new BufferedReader(fr))
-        {
-            while((currentLine = reader.readLine()) != null)
-            {
-                if(currentLine.length() < 1)
-                    continue;
-
-                currentLine = fullCleanProcessInternal(currentLine);
-                builder.append(currentLine).append(System.lineSeparator());
-            }
-            writeContentToExistingFile(builder.toString().trim(), outputFile);
-        }
-        catch(Exception ex)
-        {
-            ex.printStackTrace();
-        }
     }
 
     private String processFilterTokensPerWord(Set<String> tokens, boolean splitTokens)
@@ -240,44 +177,6 @@ public class DocumentCleaner
             }
         }
         return content.toString().trim();
-    }
-
-    private File createFileAndDirectory(String fullName) throws IOException
-    {
-        File file = new File(fullName);
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-        return file;
-    }
-
-    public void preprocessFilterFiles(String saveDirectory)
-    {
-        System.out.println("INFO: Preprocessing filter files...");
-
-        File playerOutputFile;
-        File trainerOutputFile;
-        File clubsOutputFile;
-        try
-        {
-            playerOutputFile = createFileAndDirectory(saveDirectory + "\\playerList_preprocessed.txt");
-            trainerOutputFile = createFileAndDirectory(saveDirectory + "\\trainerList_preprocessed.txt");
-            clubsOutputFile = createFileAndDirectory(saveDirectory + "\\clubsList_preprocessed.txt");
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Terminating...");
-            ex.printStackTrace();
-            return;
-        }
-
-        String playerContent = processFilterTokensPerWord(_playerList, _config.getSplitPlayerTokens());
-        writeContentToExistingFile(playerContent.trim(), playerOutputFile);
-
-        String trainerContent = processFilterTokensPerWord(_trainerList, _config.getSplitTrainerTokens());
-        writeContentToExistingFile(trainerContent.trim(), trainerOutputFile);
-
-        String clubsContent = processFilterTokensPerWord(_clubList, _config.getSplitClubTokens());
-        writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
     }
 
     private List<String> ensureTokenMinLength(List<String> input)
@@ -340,7 +239,7 @@ public class DocumentCleaner
         input = input.replaceAll("[<>_]+", " ");
         return input.replaceAll("[\\d\"§$%&/()=`ß´²³{\\[\\]}\\\\+*~#'’\\-|^°@€]+", " ");
     }
-    
+
     private String normalizeText(String input)
     {
         input = Normalizer.normalize(input, Normalizer.Form.NFD);
@@ -370,4 +269,82 @@ public class DocumentCleaner
         input = input.replace("ø", "oe");
         return input;
     }
+
+    //endregion
+
+    //region Public Methods
+
+    public void cleanProcess(Path path, String saveDirectory)
+    {
+        //entry point
+        try
+        {
+            System.out.println("INFO: Processing " + path + " ...");
+
+            File contentFile = path.toFile();
+            File outputFile = new File(saveDirectory + "\\" + contentFile.getName().replace(".txt", "") + "_preprocessed.txt");
+            outputFile.getParentFile().mkdirs();
+            outputFile.createNewFile();
+
+            String currentLine;
+            StringBuilder builder = new StringBuilder();
+            try(FileReader fr = new FileReader(contentFile);
+                BufferedReader reader = new BufferedReader(fr))
+            {
+                while((currentLine = reader.readLine()) != null)
+                {
+                    if(currentLine.length() < 1)
+                        continue;
+
+                    currentLine = fullCleanProcessInternal(currentLine);
+                    builder.append(currentLine).append(System.lineSeparator());
+                }
+                FileHelper.writeContentToExistingFile(builder.toString().trim(), outputFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    public void preprocessFilterFiles(String saveDirectory)
+    {
+        //entry point
+        try
+        {
+            System.out.println("INFO: Preprocessing filter files...");
+
+            File playerOutputFile;
+            File trainerOutputFile;
+            File clubsOutputFile;
+            try
+            {
+                playerOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\playerList_preprocessed.txt");
+                trainerOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\trainerList_preprocessed.txt");
+                clubsOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\clubsList_preprocessed.txt");
+            }
+            catch (Exception ex)
+            {
+                System.out.println("Terminating...");
+                ex.printStackTrace();
+                return;
+            }
+
+            String playerContent = processFilterTokensPerWord(_playerList, _config.getSplitPlayerTokens());
+            FileHelper.writeContentToExistingFile(playerContent.trim(), playerOutputFile);
+
+            String trainerContent = processFilterTokensPerWord(_trainerList, _config.getSplitTrainerTokens());
+            FileHelper.writeContentToExistingFile(trainerContent.trim(), trainerOutputFile);
+
+            String clubsContent = processFilterTokensPerWord(_clubList, _config.getSplitClubTokens());
+            FileHelper.writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    //endregion
 }
