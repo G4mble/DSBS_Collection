@@ -19,7 +19,7 @@ public class CSVProcessConfig extends ProcessConfigBase
     {
         try
         {
-            loadConfigurationFromFile(ResourceProvider.getCSVConfigPath());
+            initializeInternal(ResourceProvider.getCSVConfigPath());
         }
         catch (Exception ex)
         {
