@@ -4,10 +4,13 @@ import Config.ContentProcessConfig;
 import Preprocessing.TokenReplace.DFLReplacer;
 import Utility.CollectionHelper;
 import Utility.FileHelper;
+import Utility.LanguageUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.text.Normalizer;
 import java.util.*;
@@ -20,6 +23,8 @@ public class DocumentCleaner
     private Set<String> _playerList;
     private Set<String> _clubList;
     private Set<String> _trainerList;
+    private Set<String> _stadiumsList;
+    private Set<String> _monthsList;
 
     private final ContentProcessConfig _config;
 
@@ -27,13 +32,15 @@ public class DocumentCleaner
 
     //region Constructors
 
-    public DocumentCleaner(ContentProcessConfig config, String stopwordFile, String playerFile, String clubFile, String trainerFile)
+    public DocumentCleaner(ContentProcessConfig config, String stopwordFile, String playerFile, String clubFile, String trainerFile, String stadiumsFile)
     {
         _config = config;
+        _monthsList = new HashSet<>(Arrays.asList("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"));
         loadStopwords(stopwordFile);
         loadPlayers(playerFile);
         loadClubs(clubFile);
         loadTrainers(trainerFile);
+        loadStadiums(stadiumsFile);
     }
 
     //endregion
@@ -71,7 +78,8 @@ public class DocumentCleaner
         System.out.println("INFO: Loading clubNames from file...");
         try
         {
-            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("ISO-8859-1"));
+//            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("ISO-8859-1"));
+            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
         {
@@ -87,6 +95,19 @@ public class DocumentCleaner
             _trainerList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    private void loadStadiums(String fileName)
+    {
+        System.out.println("INFO: Loading stadiumNames from file...");
+        try
+        {
+            _stadiumsList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
+        }
+        catch(Exception ex)
         {
             ex.printStackTrace();
         }
@@ -125,17 +146,24 @@ public class DocumentCleaner
         input = normalizeText(input);
         input = replaceNonAsciiCharacters(input);
 
+        DFLReplacer dflReplacer = new DFLReplacer();
+        if(_config.getReplaceTrainerTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<token_trainer>");
+        if(_config.getReplaceStadiumTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<token_stadium>");
+
         if(_config.getPerformPerWordProcesses())
         {
             List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
-            DFLReplacer dflReplacer = new DFLReplacer();
 
+            if(_config.getRemoveMonths())
+                inputSplit = removeMonths(inputSplit);
             if(_config.getReplacePlayerTokens())
-                inputSplit = dflReplacer.replaceTokenTest(inputSplit, _playerList, "<token_player>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<token_player>");
             if(_config.getReplaceClubTokens())
-                inputSplit = dflReplacer.replaceTokenTest(inputSplit, _clubList, "<token_club>");
-            if(_config.getReplaceTrainerTokens())
-                inputSplit = dflReplacer.replaceTokenTest(inputSplit, _trainerList, "<token_trainer>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _clubList, "<token_club>");
+//            if(_config.getReplaceTrainerTokens())
+//                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _trainerList, "<token_trainer>");
             if(_config.getRemovePlayerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
             if(_config.getRemoveClubTokens())
@@ -144,6 +172,8 @@ public class DocumentCleaner
                 inputSplit = dflReplacer.removeToken(inputSplit, _trainerList);
             if(_config.getRemoveStopwords())
                 inputSplit = removeStopwords(inputSplit);
+            if(_config.getUseStemming())
+                inputSplit = stemTokens(inputSplit);
             if(_config.getCheckTokenMinLength())
                 inputSplit = ensureTokenMinLength(inputSplit);
 
@@ -270,6 +300,23 @@ public class DocumentCleaner
         return input;
     }
 
+    private List<String> stemTokens(List<String> input)
+    {
+        List<String> output = new ArrayList<>();
+        for(String item:input)
+        {
+            item = LanguageUtils.stem(item);
+            output.add(item);
+        }
+        return output;
+    }
+
+    private List<String> removeMonths(List<String> input)
+    {
+        input.removeAll(_monthsList);
+        return input;
+    }
+
     //endregion
 
     //region Public Methods
@@ -282,25 +329,28 @@ public class DocumentCleaner
             System.out.println("INFO: Processing " + path + " ...");
 
             File contentFile = path.toFile();
-            File outputFile = new File(saveDirectory + "\\" + contentFile.getName().replace(".txt", "") + "_preprocessed.txt");
-            outputFile.getParentFile().mkdirs();
-            outputFile.createNewFile();
+            String outputFileName = saveDirectory + "\\" + contentFile.getName().replace(".txt", "") + "_preprocessed.txt";
+            File outputFile = FileHelper.createFileAndDirectory(outputFileName);
 
-            String currentLine;
-            StringBuilder builder = new StringBuilder();
-            try(FileReader fr = new FileReader(contentFile);
-                BufferedReader reader = new BufferedReader(fr))
-            {
-                while((currentLine = reader.readLine()) != null)
-                {
-                    if(currentLine.length() < 1)
-                        continue;
+            String fileContent = FileUtils.readFileToString(contentFile, StandardCharsets.UTF_8);
+            fileContent = fullCleanProcessInternal(fileContent);
+            FileHelper.writeContentToExistingFile(fileContent.trim(), outputFile);
 
-                    currentLine = fullCleanProcessInternal(currentLine);
-                    builder.append(currentLine).append(System.lineSeparator());
-                }
-                FileHelper.writeContentToExistingFile(builder.toString().trim(), outputFile);
-            }
+//            String currentLine;
+//            StringBuilder builder = new StringBuilder();
+//            try(FileReader fr = new FileReader(contentFile);
+//                BufferedReader reader = new BufferedReader(fr))
+//            {
+//                while((currentLine = reader.readLine()) != null)
+//                {
+//                    if(currentLine.length() < 1)
+//                        continue;
+
+//                    currentLine = fullCleanProcessInternal(currentLine);
+//                    builder.append(currentLine).append(System.lineSeparator());
+//                }
+//                FileHelper.writeContentToExistingFile(builder.toString().trim(), outputFile);
+//            }
         }
         catch (Exception ex)
         {
@@ -318,11 +368,13 @@ public class DocumentCleaner
             File playerOutputFile;
             File trainerOutputFile;
             File clubsOutputFile;
+            File stadiumsOutputFile;
             try
             {
                 playerOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\playerList_preprocessed.txt");
                 trainerOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\trainerList_preprocessed.txt");
                 clubsOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\clubsList_preprocessed.txt");
+                stadiumsOutputFile = FileHelper.createFileAndDirectory(saveDirectory + "\\stadiumsList_preprocessed.txt");
             }
             catch (Exception ex)
             {
@@ -339,6 +391,9 @@ public class DocumentCleaner
 
             String clubsContent = processFilterTokensPerWord(_clubList, _config.getSplitClubTokens());
             FileHelper.writeContentToExistingFile(clubsContent.trim(), clubsOutputFile);
+
+            String stadiumsContent = processFilterTokensPerWord(_stadiumsList, false);
+            FileHelper.writeContentToExistingFile(stadiumsContent.trim(), stadiumsOutputFile);
         }
         catch (Exception ex)
         {

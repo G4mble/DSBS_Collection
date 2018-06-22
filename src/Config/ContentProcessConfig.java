@@ -18,6 +18,9 @@ public class ContentProcessConfig extends ProcessConfigBase
     private boolean splitPlayerTokens;
     private boolean checkTokenMinLength;
     private boolean configureForTokenFilterPreprocessing;
+    private boolean useStemming;
+    private boolean removeMonths;
+    private boolean replaceStadiumTokens;
 
     private int tokenMinLength;
 
@@ -96,6 +99,15 @@ public class ContentProcessConfig extends ProcessConfigBase
                 case "configureForTokenFilterPreprocessing":
                     configureForTokenFilterPreprocessing = Boolean.parseBoolean(rightHandSide);
                     break;
+                case "useStemming":
+                    useStemming = Boolean.parseBoolean(rightHandSide);
+                    break;
+                case "removeMonths":
+                    removeMonths = Boolean.parseBoolean(rightHandSide);
+                    break;
+                case "replaceStadiumTokens":
+                    replaceStadiumTokens = Boolean.parseBoolean(rightHandSide);
+                    break;
                 default:
                     return false;
             }
@@ -156,9 +168,9 @@ public class ContentProcessConfig extends ProcessConfigBase
 
     public boolean getPerformPerWordProcesses()
     {
-        return replaceClubTokens || replaceTrainerTokens || replacePlayerTokens ||
+        return replaceClubTokens || replacePlayerTokens ||
                 removeClubTokens || removeTrainerTokens || removePlayerTokens ||
-                removeStopwords || checkTokenMinLength;
+                removeStopwords || checkTokenMinLength || useStemming || removeMonths;
     }
 
     public boolean getCheckTokenMinLength()
@@ -169,6 +181,21 @@ public class ContentProcessConfig extends ProcessConfigBase
     public boolean getConfigureForTokenFilterPreprocessing()
     {
         return configureForTokenFilterPreprocessing;
+    }
+
+    public boolean getUseStemming()
+    {
+        return useStemming;
+    }
+
+    public boolean getRemoveMonths()
+    {
+        return removeMonths;
+    }
+
+    public boolean getReplaceStadiumTokens()
+    {
+        return replaceStadiumTokens;
     }
 
     //endregion

@@ -10,7 +10,7 @@ import java.io.FileReader;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CSVPreprocessor
+public class CSVFactsPreprocessor
 {
     //region Fields
 
@@ -20,7 +20,7 @@ public class CSVPreprocessor
 
     //region Constructors
 
-    public CSVPreprocessor(CSVProcessConfig config)
+    public CSVFactsPreprocessor(CSVProcessConfig config)
     {
         _config = config;
     }

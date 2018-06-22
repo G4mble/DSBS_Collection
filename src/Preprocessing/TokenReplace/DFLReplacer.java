@@ -28,7 +28,7 @@ public class DFLReplacer
         return content;
     }
 
-    public List<String> replaceTokenTest(List<String> content, Set<String> tokens, String replacement)
+    public List<String> replaceTokenOnWordBasis(List<String> content, Set<String> tokens, String replacement)
     {
         Set<String> contentCopy = new HashSet<>(content);
         for(String item:contentCopy)
@@ -37,6 +37,15 @@ public class DFLReplacer
                 Collections.replaceAll(content, item, replacement);
         }
         return content;
+    }
+
+    public String replaceTokenOnSentenceBasis(String input, Set<String> tokens, String replacement)
+    {
+        for(String token:tokens)
+        {
+            input = input.replace(token, replacement);
+        }
+        return input;
     }
 
     public List<String> removeToken(List<String> content, Set<String> tokens)
