@@ -12,27 +12,6 @@ public class ContentCleaningRoot
 {
     public static void main(String[] args)
     {
-        //region Local Paths
-
-        //TODO Thomas local
-        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\title\\extracted_raw";
-        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\title\\preprocessed";
-//        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\raw";
-//        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\preprocessed";
-        //TODO select one depending on acbstrac or content
-//        String contentDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\raw";
-//        String saveDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\abstracts\\preprocessed";
-        String tokenFilterBase = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-        String filterOutputDirectory = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
-
-        //TODO Thomas Laptop local
-//        String contentDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\raw_full";
-//        String saveDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\001_Article Data\\contents\\preprocessed";
-//        String tokenFilterBase = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter";
-//        String filterOutputDirectory = "D:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\filter\\preprocessed";
-
-        //endregion
-
         //region Global Paths
 
         String stopwordFile = ResourceProvider.getStopwordPath();
@@ -49,13 +28,13 @@ public class ContentCleaningRoot
 
         if(config.getConfigureForTokenFilterPreprocessing())
         {
-            String playerFileRaw = tokenFilterBase + "\\raw\\player.txt";
-            String clubFileRaw = tokenFilterBase + "\\raw\\clubs.txt";
-            String trainerFileRaw = tokenFilterBase + "\\raw\\trainer.txt";
-            String stadiumsFileRaw = tokenFilterBase + "\\raw\\stadiums.txt";
+            String playerFileRaw = config.getFilterDirectoryBase() + "\\raw\\player.txt";
+            String clubFileRaw = config.getFilterDirectoryBase() + "\\raw\\clubs.txt";
+            String trainerFileRaw = config.getFilterDirectoryBase() + "\\raw\\trainer.txt";
+            String stadiumsFileRaw = config.getFilterDirectoryBase() + "\\raw\\stadiums.txt";
 
             DocumentCleaner documentCleaner = new DocumentCleaner(config, stopwordFile, playerFileRaw, clubFileRaw, trainerFileRaw, stadiumsFileRaw);
-            documentCleaner.preprocessFilterFiles(filterOutputDirectory);
+            documentCleaner.preprocessFilterFiles(config.getFilterDirectoryBase() + "\\preprocessed");
             return;
         }
 
@@ -63,15 +42,15 @@ public class ContentCleaningRoot
 
         //region Content-File Preprocessing
 
-        try(Stream<Path> contentStream = Files.walk(Paths.get(contentDirectory)))
+        try(Stream<Path> contentStream = Files.walk(Paths.get(config.getContentInputDirectory())))
         {
-            String playerFilePreprocessed = tokenFilterBase + "\\preprocessed\\playerList_preprocessed.txt";
-            String clubFilePreprocessed = tokenFilterBase + "\\preprocessed\\clubsList_preprocessed.txt";
-            String trainerFilePreprocessed = tokenFilterBase + "\\preprocessed\\trainerList_preprocessed.txt";
-            String stadiumsFilePreprocessed = tokenFilterBase + "\\preprocessed\\stadiumsList_preprocessed.txt";
+            String playerFilePreprocessed = config.getFilterDirectoryBase() + "\\preprocessed\\playerList_preprocessed.txt";
+            String clubFilePreprocessed = config.getFilterDirectoryBase() + "\\preprocessed\\clubsList_preprocessed.txt";
+            String trainerFilePreprocessed = config.getFilterDirectoryBase() + "\\preprocessed\\trainerList_preprocessed.txt";
+            String stadiumsFilePreprocessed = config.getFilterDirectoryBase() + "\\preprocessed\\stadiumsList_preprocessed.txt";
 
             DocumentCleaner documentCleaner = new DocumentCleaner(config, stopwordFile, playerFilePreprocessed, clubFilePreprocessed, trainerFilePreprocessed, stadiumsFilePreprocessed);
-            contentStream.filter(Files::isRegularFile).forEach(x -> documentCleaner.cleanProcess(x, saveDirectory));
+            contentStream.filter(Files::isRegularFile).forEach(x -> documentCleaner.cleanProcess(x, config.getContentOutputDirectory()));
         }
         catch (Exception ex)
         {

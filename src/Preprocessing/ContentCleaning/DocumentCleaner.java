@@ -134,44 +134,52 @@ public class DocumentCleaner
     {
         //TODO WARNING: CHANGING THE ORDER MIGHT RESULT IN UNEXPECTED RESULTS
 
-        input = replaceBundesligaCom(input);
         input = fixWhitespaces(input);
         input = fixMacEncoding(input);
         input = unescapeText(input);
         input = transformToLowerCaseTrim(input);
         input = replaceUmlauts(input);
         input = replaceDates(input);
+        input = replaceBundesligaCom(input);
+        input = replaceArticleReference(input);
+        input = replaceMatchResults(input);
         input = stripPunctuation(input);
         input = replaceSpecialCharactersWithWhitespace(input);
         input = normalizeText(input);
         input = replaceNonAsciiCharacters(input);
 
-        DFLReplacer dflReplacer = new DFLReplacer();
-        if(_config.getReplaceTrainerTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<token_trainer>");
-        if(_config.getReplaceStadiumTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<token_stadium>");
-
-        if(_config.getPerformPerWordProcesses())
+        if(_config.getRemoveStopwords() || _config.getRemoveMonths())
         {
             List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
 
+            if(_config.getRemoveStopwords())
+                inputSplit = removeStopwords(inputSplit);
             if(_config.getRemoveMonths())
                 inputSplit = removeMonths(inputSplit);
+
+            input = CollectionHelper.collectionToString(inputSplit);
+        }
+
+        DFLReplacer dflReplacer = new DFLReplacer();
+        if(_config.getReplaceTrainerTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<trainer_name>");
+        if(_config.getReplaceStadiumTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<stadium_name>");
+
+        if(_config.getPerformSecondChargePerWordProcesses())
+        {
+            List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
+
             if(_config.getReplacePlayerTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<token_player>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<player_name>");
             if(_config.getReplaceClubTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _clubList, "<token_club>");
-//            if(_config.getReplaceTrainerTokens())
-//                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _trainerList, "<token_trainer>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _clubList, "<club_name>");
             if(_config.getRemovePlayerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
             if(_config.getRemoveClubTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _clubList);
             if(_config.getRemoveTrainerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _trainerList);
-            if(_config.getRemoveStopwords())
-                inputSplit = removeStopwords(inputSplit);
             if(_config.getUseStemming())
                 inputSplit = stemTokens(inputSplit);
             if(_config.getCheckTokenMinLength())
@@ -315,6 +323,16 @@ public class DocumentCleaner
     {
         input.removeAll(_monthsList);
         return input;
+    }
+
+    private String replaceMatchResults(String input)
+    {
+        return input.replaceAll("\\s\\d+\\-\\d+[\\s\\.]", " <match_result> ");
+    }
+
+    private String replaceArticleReference(String input)
+    {
+        return input.replace("artikel#", "");
     }
 
     //endregion

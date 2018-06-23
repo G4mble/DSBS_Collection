@@ -1,13 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%LOCAL PATHS%%%%%%%%%%%%%%%%%%%%%
-%%%% Please specify the following local paths %%%%%
-%% in ContentCleaningRoot -> region: Local Paths %%
+%%% Please specify the following absolute paths %%%
+%%%%%% in the contentCleaner_Config.cfg file %%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--- contentDirectory         := the raw data to be processed by the content cleaning routine
--- saveDirectory            := the output directory where the processed files are stored
--- tokenFilterBase          := the base path of the directory that contains the token-filter files for player/club/trainer [see 'Folder Structure' section for more info]
--- filterOutputDirectory    := the output directory where the processed token-filter-files are stored
+-- contentInputDirectory    := the raw data to be processed by the content cleaning routine
+-- contentOutputDirectory   := the output directory where the processed files are stored
+-- filterDirectoryBase      := the base path of the directory that contains the token-filter files for player/club/trainer/stadium [see 'Folder Structure' section for more info]
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,7 +14,7 @@
 %% Please ensure the following folder structure %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--- the path specified for the variable 'tokenFilterBase' has to contain the following sub-folders
+-- the path specified for the variable 'filterDirectoryBase' has to contain the following sub-folders
     -- raw
     -- preprocessed
 
@@ -23,12 +22,13 @@
     -- player.txt
     -- clubs.txt
     -- trainer.txt
+    -- stadiums.txt
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%% CONFIGURATION %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--- the config-file can be found in: src.Config --> cleanerConfig.cfg
+-- the config-file can be found in: src.Config --> contentCleaner_Config.cfg
 
 -- make sure to select the correct 'OPERATION MODE' in the config-file

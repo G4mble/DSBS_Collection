@@ -24,6 +24,10 @@ public class ContentProcessConfig extends ProcessConfigBase
 
     private int tokenMinLength;
 
+    private String contentInputDirectory;
+    private String filterDirectoryBase;
+    private String contentOutputDirectory;
+
     //endregion
 
     //region Constructors
@@ -108,6 +112,15 @@ public class ContentProcessConfig extends ProcessConfigBase
                 case "replaceStadiumTokens":
                     replaceStadiumTokens = Boolean.parseBoolean(rightHandSide);
                     break;
+                case "contentInputDirectory":
+                    contentInputDirectory = rightHandSide;
+                    break;
+                case "contentOutputDirectory":
+                    contentOutputDirectory = rightHandSide;
+                    break;
+                case "filterDirectoryBase":
+                    filterDirectoryBase = rightHandSide;
+                    break;
                 default:
                     return false;
             }
@@ -166,11 +179,11 @@ public class ContentProcessConfig extends ProcessConfigBase
         return splitPlayerTokens;
     }
 
-    public boolean getPerformPerWordProcesses()
+    public boolean getPerformSecondChargePerWordProcesses()
     {
         return replaceClubTokens || replacePlayerTokens ||
                 removeClubTokens || removeTrainerTokens || removePlayerTokens ||
-                removeStopwords || checkTokenMinLength || useStemming || removeMonths;
+                checkTokenMinLength || useStemming;
     }
 
     public boolean getCheckTokenMinLength()
@@ -196,6 +209,21 @@ public class ContentProcessConfig extends ProcessConfigBase
     public boolean getReplaceStadiumTokens()
     {
         return replaceStadiumTokens;
+    }
+
+    public String getContentInputDirectory()
+    {
+        return contentInputDirectory;
+    }
+
+    public String getFilterDirectoryBase()
+    {
+        return filterDirectoryBase;
+    }
+
+    public String getContentOutputDirectory()
+    {
+        return contentOutputDirectory;
     }
 
     //endregion
