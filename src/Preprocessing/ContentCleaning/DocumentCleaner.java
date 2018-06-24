@@ -136,6 +136,7 @@ public class DocumentCleaner
 
         input = fixWhitespaces(input);
         input = fixMacEncoding(input);
+        input = replaceCRLF(input);
         input = unescapeText(input);
         input = transformToLowerCaseTrim(input);
         input = replaceUmlauts(input);
@@ -333,6 +334,12 @@ public class DocumentCleaner
     private String replaceArticleReference(String input)
     {
         return input.replace("artikel#", "");
+    }
+
+    private String replaceCRLF(String input)
+    {
+        input = input.replaceAll("\r", " ");
+        return input.replaceAll("\n", " ");
     }
 
     //endregion
