@@ -13,7 +13,7 @@ public class CSVTitleExtractor
 {
     private final String _inputPath = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\csv\\raw\\dim_web_articles.txt";
     private final String _outputPath = "H:\\Daten\\Uni\\Master\\2.Semester\\DSBS\\03_Industry Project\\002_Workspace\\title\\extracted_raw";
-    private final String _contentTypeSuffix = "abstract";
+    private final String _contentTypeSuffix = "title";
 
     public static void main(String[] args)
     {
