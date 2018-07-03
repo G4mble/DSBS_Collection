@@ -21,7 +21,7 @@ public class DocumentCleaner
 
     private Set<String> _stopwords;
     private Set<String> _playerList;
-    private Set<String> _clubList;
+    private LinkedHashSet<String> _clubList;
     private Set<String> _trainerList;
     private Set<String> _stadiumsList;
     private Set<String> _monthsList;
@@ -79,7 +79,7 @@ public class DocumentCleaner
         try
         {
 //            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("ISO-8859-1"));
-            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("UTF-8"));
+            _clubList = FileHelper.loadDocumentLinesToLinkedHashSet(fileName, Charset.forName("UTF-8"));
         }
         catch (Exception ex)
         {
@@ -206,7 +206,7 @@ public class DocumentCleaner
                 for(String currentPart:tokenParts)
                 {
                     currentPart = filterTokenCleanProcessInternal(currentPart);
-                    if(currentPart.length() >= 3)
+                    if(currentPart.length() >= 2)
                         content.append(currentPart).append(System.lineSeparator());
                 }
             }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,5 +35,11 @@ public class FileHelper
     {
         List<String> lines = Files.readAllLines(new File(fileName).toPath(), charset);
         return new HashSet<>(lines);
+    }
+
+    public static LinkedHashSet<String> loadDocumentLinesToLinkedHashSet(String fileName, Charset charset) throws IOException
+    {
+        List<String> lines = Files.readAllLines(new File(fileName).toPath(), charset);
+        return new LinkedHashSet<>(lines);
     }
 }
