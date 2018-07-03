@@ -165,10 +165,6 @@ public class DocumentCleaner
         DFLReplacer dflReplacer = new DFLReplacer();
         if(_config.getReplaceStadiumTokens())
             input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<stadium_name>");
-        if(_config.getReplaceTrainerTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<coach_name>");
-        if(_config.getReplacePlayerTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _playerList, "<player_name>");
         if(_config.getReplaceClubTokens())
             input = dflReplacer.replaceTokenOnSentenceBasis(input, _clubList, "<club_name>");
 
@@ -176,6 +172,10 @@ public class DocumentCleaner
         {
             List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
 
+            if(_config.getReplaceTrainerTokens())
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _trainerList, "<coach_name>");
+            if(_config.getReplacePlayerTokens())
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<player_name>");
             if(_config.getRemovePlayerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
             if(_config.getRemoveClubTokens())
