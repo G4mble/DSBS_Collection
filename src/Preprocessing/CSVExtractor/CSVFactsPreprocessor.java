@@ -51,14 +51,14 @@ public class CSVFactsPreprocessor
         return input;
     }
 
-    private int processApScore(String input) throws NumberFormatException
+    private float processApScore(String input) throws NumberFormatException
     {
         input = declutter(input);
-        input = input.substring(0, 2);
-        input = input.replaceAll("[.,]", "");
+        input = input.substring(0, 4);
+        input = input.replaceAll("[.,]", ".");
 
-        int output = Integer.parseInt(input);
-        if(output < 0 || output > 100)
+        float output = Float.parseFloat(input);
+        if(output < 0.0f || output > 100.0f)
             throw new NumberFormatException("Invalid APScore Range: " + output);
         return output;
     }
@@ -122,7 +122,7 @@ public class CSVFactsPreprocessor
                             System.out.println("WARNING: Invalid articleID. Entry removed: " + currentLine);
                         continue;
                     }
-                    int apScore;
+                    float apScore;
                     try
                     {
                         apScore = processApScore(wordsInLine[11]);

@@ -127,3 +127,8 @@ th
 vf
 sp
 vgg
+per
+cent
+percent
+co
+re

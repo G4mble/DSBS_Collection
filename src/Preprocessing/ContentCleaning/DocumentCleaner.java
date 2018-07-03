@@ -143,11 +143,12 @@ public class DocumentCleaner
         input = replaceUmlauts(input);
         input = replaceDates(input);
         input = replaceBundesligaCom(input);
-        input = replaceMatchResults(input);
+        input = replaceMatchResultsForLaterRemoval(input);
         input = stripPunctuation(input);
         input = replaceSpecialCharactersWithWhitespace(input);
         input = normalizeText(input);
         input = replaceNonAsciiCharacters(input);
+        input = finallyReplaceMatchResults(input);
 
         if(_config.getRemoveStopwords() || _config.getRemoveMonths())
         {
@@ -162,10 +163,10 @@ public class DocumentCleaner
         }
 
         DFLReplacer dflReplacer = new DFLReplacer();
-        if(_config.getReplaceTrainerTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<coach_name>");
         if(_config.getReplaceStadiumTokens())
             input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<stadium_name>");
+        if(_config.getReplaceTrainerTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<coach_name>");
         if(_config.getReplacePlayerTokens())
             input = dflReplacer.replaceTokenOnSentenceBasis(input, _playerList, "<player_name>");
         if(_config.getReplaceClubTokens())
@@ -275,6 +276,7 @@ public class DocumentCleaner
 
     private String replaceSpecialCharactersWithWhitespace(String input)
     {
+        input = input.replaceAll("\u0092", " ");
         input = input.replaceAll("[<>_]+", " ");
         return input.replaceAll("[\\d\"§$%&/()=`ß´²³{\\[\\]}\\\\+*~#'’\\-|^°@€]+", " ");
     }
@@ -326,9 +328,14 @@ public class DocumentCleaner
         return input;
     }
 
-    private String replaceMatchResults(String input)
+    private String replaceMatchResultsForLaterRemoval(String input)
     {
-        return input.replaceAll("\\s\\d+\\-\\d+[\\s\\.]", " <match_result> ");
+        return input.replaceAll("\\s\\d+\\-\\d+[\\s\\.]", " grmblbtzmatchresult ");
+    }
+
+    private String finallyReplaceMatchResults(String input)
+    {
+        return input.replaceAll("\\bgrmblbtzmatchresult\\b", "<match_result>");
     }
 
     private String replaceArticleReference(String input)
