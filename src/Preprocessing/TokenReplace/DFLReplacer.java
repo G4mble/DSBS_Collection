@@ -43,7 +43,8 @@ public class DFLReplacer
     {
         for(String token:tokens)
         {
-            input = input.replace(token, replacement);
+            String regex = "\\b" + token + "\\b";
+            input = input.replaceAll(regex, replacement);
         }
         return input;
     }

@@ -181,8 +181,7 @@ public class ContentProcessConfig extends ProcessConfigBase
 
     public boolean getPerformSecondChargePerWordProcesses()
     {
-        return replaceClubTokens || replacePlayerTokens ||
-                removeClubTokens || removeTrainerTokens || removePlayerTokens ||
+        return removeClubTokens || removeTrainerTokens || removePlayerTokens ||
                 checkTokenMinLength || useStemming;
     }
 

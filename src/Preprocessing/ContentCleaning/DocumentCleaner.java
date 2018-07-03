@@ -134,6 +134,7 @@ public class DocumentCleaner
     {
         //TODO WARNING: CHANGING THE ORDER MIGHT RESULT IN UNEXPECTED RESULTS
 
+        input = replaceArticleReference(input);
         input = fixWhitespaces(input);
         input = fixMacEncoding(input);
         input = replaceCRLF(input);
@@ -142,7 +143,6 @@ public class DocumentCleaner
         input = replaceUmlauts(input);
         input = replaceDates(input);
         input = replaceBundesligaCom(input);
-        input = replaceArticleReference(input);
         input = replaceMatchResults(input);
         input = stripPunctuation(input);
         input = replaceSpecialCharactersWithWhitespace(input);
@@ -163,18 +163,18 @@ public class DocumentCleaner
 
         DFLReplacer dflReplacer = new DFLReplacer();
         if(_config.getReplaceTrainerTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<trainer_name>");
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _trainerList, "<coach_name>");
         if(_config.getReplaceStadiumTokens())
             input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<stadium_name>");
+        if(_config.getReplacePlayerTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _playerList, "<player_name>");
+        if(_config.getReplaceClubTokens())
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _clubList, "<club_name>");
 
         if(_config.getPerformSecondChargePerWordProcesses())
         {
             List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
 
-            if(_config.getReplacePlayerTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<player_name>");
-            if(_config.getReplaceClubTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _clubList, "<club_name>");
             if(_config.getRemovePlayerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
             if(_config.getRemoveClubTokens())
@@ -333,7 +333,10 @@ public class DocumentCleaner
 
     private String replaceArticleReference(String input)
     {
-        return input.replace("artikel#", "");
+        input = input.replaceAll("artikel#(\\d){1,6}", "");
+        input = input.replaceAll("Artikel#(\\d){1,6}", "");
+        input = input.replace("artikel#", "");
+        return input.replace("Artikel#", "");
     }
 
     private String replaceCRLF(String input)
