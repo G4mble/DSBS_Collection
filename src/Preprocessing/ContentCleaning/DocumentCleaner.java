@@ -79,7 +79,10 @@ public class DocumentCleaner
         try
         {
 //            _clubList = FileHelper.loadDocumentLinesToSet(fileName, Charset.forName("ISO-8859-1"));
-            _clubList = FileHelper.loadDocumentLinesToLinkedHashSet(fileName, Charset.forName("UTF-8"));
+            List<String> tmpClubList = FileHelper.loadDocumentLinesToList(fileName, Charset.forName("UTF-8"));
+
+            tmpClubList.sort(Collections.reverseOrder(Comparator.comparingInt(String::length)));
+            _clubList = new LinkedHashSet<>(tmpClubList);
         }
         catch (Exception ex)
         {

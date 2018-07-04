@@ -42,4 +42,9 @@ public class FileHelper
         List<String> lines = Files.readAllLines(new File(fileName).toPath(), charset);
         return new LinkedHashSet<>(lines);
     }
+
+    public static List<String> loadDocumentLinesToList(String fileName, Charset charset) throws IOException
+    {
+        return Files.readAllLines(new File(fileName).toPath(), charset);
+    }
 }
