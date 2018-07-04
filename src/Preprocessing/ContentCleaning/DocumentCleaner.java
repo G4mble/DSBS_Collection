@@ -147,6 +147,7 @@ public class DocumentCleaner
         input = replaceDates(input);
         input = replaceBundesligaCom(input);
         input = replaceMatchResultsForLaterRemoval(input);
+        input = replaceVersus(input);
         input = stripPunctuation(input);
         input = replaceSpecialCharactersWithWhitespace(input);
         input = normalizeText(input);
@@ -167,18 +168,18 @@ public class DocumentCleaner
 
         DFLReplacer dflReplacer = new DFLReplacer();
         if(_config.getReplaceStadiumTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, "<stadium_name>");
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _stadiumsList, " <stadium_name> ");
         if(_config.getReplaceClubTokens())
-            input = dflReplacer.replaceTokenOnSentenceBasis(input, _clubList, "<club_name>");
+            input = dflReplacer.replaceTokenOnSentenceBasis(input, _clubList, " <club_name> ");
 
         if(_config.getPerformSecondChargePerWordProcesses())
         {
             List<String> inputSplit = new ArrayList<>(Arrays.asList(input.split(" ")));
 
             if(_config.getReplaceTrainerTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _trainerList, "<coach_name>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _trainerList, " <coach_name> ");
             if(_config.getReplacePlayerTokens())
-                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, "<player_name>");
+                inputSplit = dflReplacer.replaceTokenOnWordBasis(inputSplit, _playerList, " <player_name> ");
             if(_config.getRemovePlayerTokens())
                 inputSplit = dflReplacer.removeToken(inputSplit, _playerList);
             if(_config.getRemoveClubTokens())
@@ -338,7 +339,7 @@ public class DocumentCleaner
 
     private String finallyReplaceMatchResults(String input)
     {
-        return input.replaceAll("\\bgrmblbtzmatchresult\\b", "<match_result>");
+        return input.replaceAll("\\bgrmblbtzmatchresult\\b", " <match_result> ");
     }
 
     private String replaceArticleReference(String input)
@@ -353,6 +354,12 @@ public class DocumentCleaner
     {
         input = input.replaceAll("\r", " ");
         return input.replaceAll("\n", " ");
+    }
+
+    private String replaceVersus(String input)
+    {
+        input = input.replaceAll("\\bvs.\\b", " versus ");
+        return input.replaceAll("\\bvs\\b", " versus ");
     }
 
     //endregion
